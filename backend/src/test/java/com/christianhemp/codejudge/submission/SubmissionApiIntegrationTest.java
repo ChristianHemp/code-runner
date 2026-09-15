@@ -23,6 +23,12 @@ class SubmissionApiIntegrationTest {
 
 	private static final String SEEDED_TITLE = "Sum Two Integers";
 
+	private static final String CORRECT_SOURCE =
+			"public class Solution { public static int sum(int a, int b) { return a + b; } }";
+
+	private static final String WRONG_SOURCE =
+			"public class Solution { public static int sum(int a, int b) { return a - b; } }";
+
 	@Autowired
 	private TestRestTemplate restTemplate;
 
@@ -33,22 +39,22 @@ class SubmissionApiIntegrationTest {
 	private ObjectMapper objectMapper;
 
 	@Test
-	void createSubmissionForValidProblemReturnsPendingSubmission() throws Exception {
+	void createSubmissionForCorrectSolutionReturnsCompletedAcceptedSubmission() throws Exception {
 		Long problemId = problemRepository.findByTitle(SEEDED_TITLE).orElseThrow().getId();
 
-		ResponseEntity<String> response = postSubmission(problemId, "public class Solution {}");
+		ResponseEntity<String> response = postSubmission(problemId, CORRECT_SOURCE);
 
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 		JsonNode body = objectMapper.readTree(response.getBody());
 
 		assertThat(body.get("id").asLong()).isPositive();
 		assertThat(body.get("problemId").asLong()).isEqualTo(problemId);
-		assertThat(body.get("status").asString()).isEqualTo("PENDING");
-		assertThat(body.get("verdict").isNull()).isTrue();
-		assertThat(body.get("runtimeMs").isNull()).isTrue();
+		assertThat(body.get("status").asString()).isEqualTo("COMPLETED");
+		assertThat(body.get("verdict").asString()).isEqualTo("ACCEPTED");
+		assertThat(body.get("runtimeMs").isNull()).isFalse();
 		assertThat(body.get("errorMessage").isNull()).isTrue();
-		assertThat(body.get("completedAt").isNull()).isTrue();
 		assertThat(body.get("submittedAt").asString()).isNotBlank();
+		assertThat(body.get("completedAt").asString()).isNotBlank();
 
 		assertThat(body.propertyNames()).containsExactlyInAnyOrder(
 				"id", "problemId", "status", "verdict", "runtimeMs", "errorMessage", "submittedAt", "completedAt");
@@ -56,8 +62,23 @@ class SubmissionApiIntegrationTest {
 	}
 
 	@Test
+	void createSubmissionForWrongSolutionReturnsCompletedWrongAnswerSubmission() throws Exception {
+		Long problemId = problemRepository.findByTitle(SEEDED_TITLE).orElseThrow().getId();
+
+		ResponseEntity<String> response = postSubmission(problemId, WRONG_SOURCE);
+
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+		JsonNode body = objectMapper.readTree(response.getBody());
+
+		assertThat(body.get("status").asString()).isEqualTo("COMPLETED");
+		assertThat(body.get("verdict").asString()).isEqualTo("WRONG_ANSWER");
+		// The errorMessage must never reveal the hidden expected/actual values.
+		assertThat(response.getBody()).doesNotContain("\"3\"", "\"-5\"", "\"-1\"");
+	}
+
+	@Test
 	void createSubmissionForNonexistentProblemReturns404() {
-		ResponseEntity<String> response = postSubmission(999999L, "public class Solution {}");
+		ResponseEntity<String> response = postSubmission(999999L, CORRECT_SOURCE);
 
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 	}
@@ -74,7 +95,7 @@ class SubmissionApiIntegrationTest {
 	@Test
 	void getSubmissionReturnsPersistedState() throws Exception {
 		Long problemId = problemRepository.findByTitle(SEEDED_TITLE).orElseThrow().getId();
-		ResponseEntity<String> created = postSubmission(problemId, "public class Solution {}");
+		ResponseEntity<String> created = postSubmission(problemId, CORRECT_SOURCE);
 		JsonNode createdBody = objectMapper.readTree(created.getBody());
 		long submissionId = createdBody.get("id").asLong();
 
@@ -84,7 +105,8 @@ class SubmissionApiIntegrationTest {
 		JsonNode body = objectMapper.readTree(response.getBody());
 		assertThat(body.get("id").asLong()).isEqualTo(submissionId);
 		assertThat(body.get("problemId").asLong()).isEqualTo(problemId);
-		assertThat(body.get("status").asString()).isEqualTo("PENDING");
+		assertThat(body.get("status").asString()).isEqualTo("COMPLETED");
+		assertThat(body.get("verdict").asString()).isEqualTo("ACCEPTED");
 	}
 
 	@Test

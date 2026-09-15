@@ -59,6 +59,18 @@ public class Submission {
 		this.submittedAt = Instant.now();
 	}
 
+	public void markRunning() {
+		this.status = SubmissionStatus.RUNNING;
+	}
+
+	public void complete(Verdict verdict, Integer runtimeMs, String errorMessage) {
+		this.status = SubmissionStatus.COMPLETED;
+		this.verdict = verdict;
+		this.runtimeMs = runtimeMs;
+		this.errorMessage = errorMessage;
+		this.completedAt = Instant.now();
+	}
+
 	public Long getId() {
 		return id;
 	}

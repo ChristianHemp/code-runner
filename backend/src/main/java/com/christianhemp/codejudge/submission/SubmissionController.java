@@ -19,6 +19,11 @@ public class SubmissionController {
 		this.submissionService = submissionService;
 	}
 
+	/**
+	 * Judging runs synchronously - this request blocks until compilation and all
+	 * hidden tests finish, and returns the final verdict directly. There is no
+	 * queue yet; asynchronous execution is a later milestone.
+	 */
 	@PostMapping("/api/problems/{problemId}/submissions")
 	@ResponseStatus(HttpStatus.CREATED)
 	public SubmissionResponse createSubmission(
