@@ -1,5 +1,6 @@
 package com.christianhemp.codejudge.submission;
 
+import com.christianhemp.codejudge.execution.Verdict;
 import com.christianhemp.codejudge.problem.Problem;
 
 import jakarta.persistence.Column;

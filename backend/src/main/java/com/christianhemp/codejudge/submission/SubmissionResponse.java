@@ -1,5 +1,7 @@
 package com.christianhemp.codejudge.submission;
 
+import com.christianhemp.codejudge.execution.Verdict;
+
 import java.time.Instant;
 
 /**

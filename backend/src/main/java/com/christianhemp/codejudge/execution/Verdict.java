@@ -1,4 +1,4 @@
-package com.christianhemp.codejudge.submission;
+package com.christianhemp.codejudge.execution;
 
 public enum Verdict {
 	ACCEPTED,

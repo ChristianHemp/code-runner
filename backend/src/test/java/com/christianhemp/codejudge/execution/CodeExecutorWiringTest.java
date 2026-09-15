@@ -1,0 +1,20 @@
+package com.christianhemp.codejudge.execution;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+class CodeExecutorWiringTest {
+
+	@Autowired
+	private CodeExecutor codeExecutor;
+
+	@Test
+	void springResolvesExactlyOneCodeExecutorImplementation() {
+		assertThat(codeExecutor).isInstanceOf(LocalJavaExecutor.class);
+	}
+
+}
