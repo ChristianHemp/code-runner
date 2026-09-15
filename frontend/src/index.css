@@ -1,0 +1,271 @@
+:root {
+  --bg: #1e1f26;
+  --panel-bg: #262832;
+  --panel-bg-alt: #2c2e3a;
+  --border: #3a3d4a;
+  --text: #e4e4ec;
+  --text-muted: #9498a8;
+  --accent: #5b8def;
+  --accent-hover: #4577dd;
+  --code-bg: #16171d;
+  --accepted: #3fb950;
+  --rejected: #f85149;
+  --warning: #d29922;
+
+  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+}
+
+button {
+  font-family: inherit;
+}
+
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-bg);
+}
+
+.app-title {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.app-body {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.problem-list {
+  width: 240px;
+  flex-shrink: 0;
+  padding: 16px;
+  border-right: 1px solid var(--border);
+  background: var(--panel-bg);
+  min-height: calc(100vh - 53px);
+}
+
+.panel-title {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin: 0 0 12px;
+}
+
+.problem-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.problem-item {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.problem-item:hover {
+  background: var(--panel-bg-alt);
+}
+
+.problem-item.selected {
+  background: var(--panel-bg-alt);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.problem-view {
+  flex: 1;
+  min-width: 0;
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.problem-view h1 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.problem-description {
+  margin: 0;
+  color: var(--text-muted);
+  max-width: 70ch;
+  line-height: 1.5;
+}
+
+.method-signature {
+  margin: 0;
+  padding: 10px 14px;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 13px;
+  overflow-x: auto;
+}
+
+.code-editor {
+  width: 100%;
+  min-height: 320px;
+  resize: vertical;
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 1.5;
+  tab-size: 4;
+  padding: 14px;
+  background: var(--code-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  white-space: pre;
+}
+
+.code-editor:disabled {
+  opacity: 0.7;
+}
+
+.submit-button {
+  align-self: flex-start;
+  padding: 10px 22px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.submit-button:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.submission-result {
+  margin-top: 4px;
+  padding: 16px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.verdict-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 14px;
+  background: var(--panel-bg-alt);
+  color: var(--text);
+}
+
+.verdict-accepted {
+  background: rgba(63, 185, 80, 0.15);
+  color: var(--accepted);
+}
+
+.verdict-rejected {
+  background: rgba(248, 81, 73, 0.15);
+  color: var(--rejected);
+}
+
+.verdict-warning {
+  background: rgba(210, 153, 34, 0.15);
+  color: var(--warning);
+}
+
+.submission-meta {
+  margin: 12px 0 0;
+}
+
+.submission-meta-row {
+  margin-bottom: 8px;
+}
+
+.submission-meta-row dt {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.submission-meta-row dd {
+  margin: 0;
+}
+
+.submission-error pre {
+  margin: 0;
+  padding: 10px;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 13px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--rejected);
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.error-text {
+  color: var(--rejected);
+}
+
+@media (max-width: 800px) {
+  .app-body {
+    flex-direction: column;
+  }
+
+  .problem-list {
+    width: 100%;
+    min-height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .problem-view {
+    padding: 20px;
+  }
+}
