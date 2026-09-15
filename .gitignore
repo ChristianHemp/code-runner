@@ -1,0 +1,17 @@
+# Maven
+target/
+**/target/
+
+# IntelliJ
+.idea/
+*.iml
+
+# macOS
+.DS_Store
+
+# Environment
+.env
+
+# Frontend
+node_modules/
+dist/
