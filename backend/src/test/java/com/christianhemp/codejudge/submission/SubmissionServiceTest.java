@@ -3,6 +3,7 @@ package com.christianhemp.codejudge.submission;
 import com.christianhemp.codejudge.execution.CodeExecutor;
 import com.christianhemp.codejudge.execution.ExecutionRequest;
 import com.christianhemp.codejudge.execution.ExecutionResult;
+import com.christianhemp.codejudge.execution.SignatureShape;
 import com.christianhemp.codejudge.execution.Verdict;
 import com.christianhemp.codejudge.problem.Problem;
 import com.christianhemp.codejudge.problem.ProblemNotFoundException;
@@ -48,7 +49,9 @@ class SubmissionServiceTest {
 
 	@Test
 	void createSubmissionRunsFullLifecycleAndPersistsFinalVerdict() throws Exception {
-		Problem problem = new Problem("Sum Two Integers", "Add two ints.", "public static int sum(int a, int b)");
+		Problem problem = new Problem(
+				"Sum Two Integers", "Add two ints.", "public static int sum(int a, int b)",
+				"sum", SignatureShape.INT_INT_TO_INT);
 		setId(problem, 1L);
 		when(problemRepository.findById(1L)).thenReturn(Optional.of(problem));
 		when(testCaseRepository.findByProblemId(1L)).thenReturn(List.of(new TestCase("[1, 2]", "3", true)));
@@ -81,6 +84,8 @@ class SubmissionServiceTest {
 		verify(codeExecutor).execute(executionRequestCaptor.capture());
 		ExecutionRequest executionRequest = executionRequestCaptor.getValue();
 		assertThat(executionRequest.sourceCode()).isEqualTo("public class Solution {}");
+		assertThat(executionRequest.methodSignature().methodName()).isEqualTo("sum");
+		assertThat(executionRequest.methodSignature().shape()).isEqualTo(SignatureShape.INT_INT_TO_INT);
 		assertThat(executionRequest.testInputs()).hasSize(1);
 		assertThat(executionRequest.testInputs().get(0).arguments()).containsExactly("1", "2");
 		assertThat(executionRequest.testInputs().get(0).expectedOutput()).isEqualTo("3");
@@ -88,7 +93,9 @@ class SubmissionServiceTest {
 
 	@Test
 	void unexpectedExecutorFailureCompletesSubmissionAsRuntimeErrorInsteadOfStayingRunning() throws Exception {
-		Problem problem = new Problem("Sum Two Integers", "Add two ints.", "public static int sum(int a, int b)");
+		Problem problem = new Problem(
+				"Sum Two Integers", "Add two ints.", "public static int sum(int a, int b)",
+				"sum", SignatureShape.INT_INT_TO_INT);
 		setId(problem, 1L);
 		when(problemRepository.findById(1L)).thenReturn(Optional.of(problem));
 		when(testCaseRepository.findByProblemId(1L)).thenReturn(List.of());
@@ -119,7 +126,9 @@ class SubmissionServiceTest {
 
 	@Test
 	void getSubmissionReturnsPersistedStateForExistingId() throws Exception {
-		Problem problem = new Problem("Sum Two Integers", "Add two ints.", "public static int sum(int a, int b)");
+		Problem problem = new Problem(
+				"Sum Two Integers", "Add two ints.", "public static int sum(int a, int b)",
+				"sum", SignatureShape.INT_INT_TO_INT);
 		setId(problem, 1L);
 		Submission submission = new Submission(problem, "public class Solution {}");
 		setId(submission, 5L);

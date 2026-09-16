@@ -4,11 +4,23 @@ import type { ProblemDetail, ProblemSummary, Submission } from "./types/api";
 import { ProblemList } from "./components/ProblemList";
 import { ProblemView } from "./components/ProblemView";
 
+/**
+ * Picks a compiling placeholder return value from the method signature's
+ * return-type keyword (the third whitespace-separated token in
+ * "public static <ReturnType> <name>(...)"). This is a targeted lookup of
+ * one known keyword, not a Java type parser - it only needs to distinguish
+ * boolean from everything else this judge currently supports.
+ */
+function defaultReturnStatement(methodSignature: string): string {
+  const returnType = methodSignature.trim().split(/\s+/)[2];
+  return returnType === "boolean" ? "return false;" : "return 0;";
+}
+
 function buildStarterTemplate(methodSignature: string): string {
   return `public class Solution {
     ${methodSignature} {
         // Write your solution here
-        return 0;
+        ${defaultReturnStatement(methodSignature)}
     }
 }
 `;

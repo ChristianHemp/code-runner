@@ -20,11 +20,11 @@ import java.util.concurrent.TimeUnit;
  * compilation succeeds - runs it against hidden tests with {@code java},
  * through a small generated harness.
  *
- * <p>Submitted source is always written as {@code Solution.java}, and the
- * generated harness is hardcoded to the current "Sum Two Integers" problem's
- * {@code public static int sum(int a, int b)} signature. Neither source
- * parsing nor a general per-problem harness generator is attempted here -
- * this milestone only needs to judge that one problem correctly.
+ * <p>Submitted source is always written as {@code Solution.java}. The
+ * harness invocation is generated from the request's {@link MethodSignature}
+ * - a closed set of {@link SignatureShape}s ({@code int,int -> int},
+ * {@code String -> boolean}, {@code String -> int}, {@code int[] -> int}),
+ * not a general Java parser or type system.
  *
  * <p><strong>This is local, unsandboxed execution.</strong> Submitted code
  * now genuinely runs as an ordinary process on this host, with no resource
@@ -39,15 +39,6 @@ public class LocalJavaExecutor implements CodeExecutor {
 	private static final String SOURCE_FILE_NAME = "Solution.java";
 	private static final String HARNESS_FILE_NAME = "JudgeHarness.java";
 	private static final String HARNESS_CLASS_NAME = "JudgeHarness";
-	private static final String HARNESS_SOURCE = """
-			public class JudgeHarness {
-			    public static void main(String[] args) {
-			        int a = Integer.parseInt(args[0]);
-			        int b = Integer.parseInt(args[1]);
-			        System.out.print(Solution.sum(a, b));
-			    }
-			}
-			""";
 
 	private static final Duration DEFAULT_COMPILE_TIMEOUT = Duration.ofSeconds(10);
 	private static final int MAX_CAPTURED_OUTPUT_BYTES = 64 * 1024;
@@ -91,7 +82,7 @@ public class LocalJavaExecutor implements CodeExecutor {
 
 	private ExecutionResult compile(ExecutionRequest request, Path workingDirectory) {
 		writeSource(workingDirectory.resolve(SOURCE_FILE_NAME), request.sourceCode());
-		writeSource(workingDirectory.resolve(HARNESS_FILE_NAME), HARNESS_SOURCE);
+		writeSource(workingDirectory.resolve(HARNESS_FILE_NAME), generateHarnessSource(request.methodSignature()));
 
 		Process process = startProcess(
 				List.of(javacPath, SOURCE_FILE_NAME, HARNESS_FILE_NAME), workingDirectory, true);
@@ -114,6 +105,42 @@ public class LocalJavaExecutor implements CodeExecutor {
 		}
 
 		return new ExecutionResult(true, null, null, null);
+	}
+
+	/**
+	 * Builds {@code JudgeHarness.java} source for the given signature. Every
+	 * shape reduces to one expression - {@code Solution.<method>(<converted
+	 * args>)} - printed with {@code System.out.print}, which handles
+	 * {@code boolean} results ("true"/"false") the same way it handles
+	 * {@code int} results.
+	 */
+	private static String generateHarnessSource(MethodSignature signature) {
+		String call = switch (signature.shape()) {
+			case INT_INT_TO_INT -> "Solution.%s(Integer.parseInt(args[0]), Integer.parseInt(args[1]))"
+					.formatted(signature.methodName());
+			case STRING_TO_BOOLEAN, STRING_TO_INT -> "Solution.%s(args[0])".formatted(signature.methodName());
+			case INT_ARRAY_TO_INT -> "Solution.%s(parseIntArray(args[0]))".formatted(signature.methodName());
+		};
+
+		return """
+				public class JudgeHarness {
+				    public static void main(String[] args) {
+				        System.out.print(%s);
+				    }
+
+				    private static int[] parseIntArray(String csv) {
+				        if (csv.isEmpty()) {
+				            return new int[0];
+				        }
+				        String[] parts = csv.split(",");
+				        int[] values = new int[parts.length];
+				        for (int i = 0; i < parts.length; i++) {
+				            values[i] = Integer.parseInt(parts[i].trim());
+				        }
+				        return values;
+				    }
+				}
+				""".formatted(call);
 	}
 
 	/**

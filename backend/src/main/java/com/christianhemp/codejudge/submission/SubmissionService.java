@@ -3,6 +3,7 @@ package com.christianhemp.codejudge.submission;
 import com.christianhemp.codejudge.execution.CodeExecutor;
 import com.christianhemp.codejudge.execution.ExecutionRequest;
 import com.christianhemp.codejudge.execution.ExecutionResult;
+import com.christianhemp.codejudge.execution.MethodSignature;
 import com.christianhemp.codejudge.execution.TestInput;
 import com.christianhemp.codejudge.execution.Verdict;
 import com.christianhemp.codejudge.problem.Problem;
@@ -74,8 +75,9 @@ public class SubmissionService {
 
 		try {
 			List<TestInput> testInputs = loadHiddenTests(problem.getId());
+			MethodSignature methodSignature = new MethodSignature(problem.getMethodName(), problem.getSignatureShape());
 			ExecutionRequest executionRequest =
-					new ExecutionRequest(submission.getSourceCode(), TEST_TIME_LIMIT, testInputs);
+					new ExecutionRequest(submission.getSourceCode(), TEST_TIME_LIMIT, methodSignature, testInputs);
 			ExecutionResult result = codeExecutor.execute(executionRequest);
 
 			Integer runtimeMs = result.runtimeMs() == null ? null : result.runtimeMs().intValue();

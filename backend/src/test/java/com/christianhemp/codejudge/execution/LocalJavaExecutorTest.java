@@ -2,6 +2,8 @@ package com.christianhemp.codejudge.execution;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -67,11 +69,12 @@ class LocalJavaExecutorTest {
 			""";
 
 	private static final Duration DEFAULT_TIME_LIMIT = Duration.ofSeconds(2);
+	private static final MethodSignature SUM_SIGNATURE = new MethodSignature("sum", SignatureShape.INT_INT_TO_INT);
 
 	@Test
 	void correctSolutionIsAccepted() {
 		ExecutionResult result = new LocalJavaExecutor().execute(
-				new ExecutionRequest(CORRECT_SOURCE, DEFAULT_TIME_LIMIT, sumTestInputs()));
+				new ExecutionRequest(CORRECT_SOURCE, DEFAULT_TIME_LIMIT, SUM_SIGNATURE, sumTestInputs()));
 
 		assertThat(result.compiled()).isTrue();
 		assertThat(result.verdict()).isEqualTo(Verdict.ACCEPTED);
@@ -82,7 +85,7 @@ class LocalJavaExecutorTest {
 	@Test
 	void incorrectSolutionIsWrongAnswer() {
 		ExecutionResult result = new LocalJavaExecutor().execute(
-				new ExecutionRequest(INCORRECT_SOURCE, DEFAULT_TIME_LIMIT, sumTestInputs()));
+				new ExecutionRequest(INCORRECT_SOURCE, DEFAULT_TIME_LIMIT, SUM_SIGNATURE, sumTestInputs()));
 
 		assertThat(result.compiled()).isTrue();
 		assertThat(result.verdict()).isEqualTo(Verdict.WRONG_ANSWER);
@@ -91,7 +94,7 @@ class LocalJavaExecutorTest {
 	@Test
 	void wrongAnswerMessageDoesNotLeakHiddenTestValues() {
 		ExecutionResult result = new LocalJavaExecutor().execute(
-				new ExecutionRequest(INCORRECT_SOURCE, DEFAULT_TIME_LIMIT, sumTestInputs()));
+				new ExecutionRequest(INCORRECT_SOURCE, DEFAULT_TIME_LIMIT, SUM_SIGNATURE, sumTestInputs()));
 
 		assertThat(result.errorMessage()).doesNotContain("3", "-5", "-1");
 	}
@@ -99,7 +102,7 @@ class LocalJavaExecutorTest {
 	@Test
 	void syntaxErrorIsCompilationError() {
 		ExecutionResult result = new LocalJavaExecutor().execute(
-				new ExecutionRequest(INVALID_SOURCE, DEFAULT_TIME_LIMIT, sumTestInputs()));
+				new ExecutionRequest(INVALID_SOURCE, DEFAULT_TIME_LIMIT, SUM_SIGNATURE, sumTestInputs()));
 
 		assertThat(result.compiled()).isFalse();
 		assertThat(result.verdict()).isEqualTo(Verdict.COMPILATION_ERROR);
@@ -108,7 +111,7 @@ class LocalJavaExecutorTest {
 	@Test
 	void compilerDiagnosticsAreCaptured() {
 		ExecutionResult result = new LocalJavaExecutor().execute(
-				new ExecutionRequest(INVALID_SOURCE, DEFAULT_TIME_LIMIT, sumTestInputs()));
+				new ExecutionRequest(INVALID_SOURCE, DEFAULT_TIME_LIMIT, SUM_SIGNATURE, sumTestInputs()));
 
 		assertThat(result.errorMessage()).isNotBlank();
 		assertThat(result.errorMessage().toLowerCase()).contains("error");
@@ -117,7 +120,7 @@ class LocalJavaExecutorTest {
 	@Test
 	void runtimeExceptionIsRuntimeError() {
 		ExecutionResult result = new LocalJavaExecutor().execute(
-				new ExecutionRequest(THROWING_SOURCE, DEFAULT_TIME_LIMIT, sumTestInputs()));
+				new ExecutionRequest(THROWING_SOURCE, DEFAULT_TIME_LIMIT, SUM_SIGNATURE, sumTestInputs()));
 
 		assertThat(result.compiled()).isTrue();
 		assertThat(result.verdict()).isEqualTo(Verdict.RUNTIME_ERROR);
@@ -128,7 +131,7 @@ class LocalJavaExecutorTest {
 	@Timeout(5)
 	void infiniteLoopIsTimeLimitExceeded() {
 		ExecutionResult result = new LocalJavaExecutor().execute(
-				new ExecutionRequest(INFINITE_LOOP_SOURCE, Duration.ofMillis(300), sumTestInputs()));
+				new ExecutionRequest(INFINITE_LOOP_SOURCE, Duration.ofMillis(300), SUM_SIGNATURE, sumTestInputs()));
 
 		assertThat(result.compiled()).isTrue();
 		assertThat(result.verdict()).isEqualTo(Verdict.TIME_LIMIT_EXCEEDED);
@@ -153,7 +156,7 @@ class LocalJavaExecutorTest {
 				""";
 
 		ExecutionResult result = new LocalJavaExecutor().execute(
-				new ExecutionRequest(source, Duration.ofMillis(300), sumTestInputs()));
+				new ExecutionRequest(source, Duration.ofMillis(300), SUM_SIGNATURE, sumTestInputs()));
 
 		assertThat(result.verdict()).isEqualTo(Verdict.WRONG_ANSWER);
 	}
@@ -161,7 +164,7 @@ class LocalJavaExecutorTest {
 	@Test
 	void submittedMainMethodIsNeverExecuted() {
 		ExecutionResult result = new LocalJavaExecutor().execute(
-				new ExecutionRequest(SOURCE_WITH_UNUSED_MAIN, DEFAULT_TIME_LIMIT, sumTestInputs()));
+				new ExecutionRequest(SOURCE_WITH_UNUSED_MAIN, DEFAULT_TIME_LIMIT, SUM_SIGNATURE, sumTestInputs()));
 
 		// If the harness ever invoked main() instead of sum(), this would surface
 		// as a RUNTIME_ERROR (the thrown exception), not ACCEPTED.
@@ -183,7 +186,7 @@ class LocalJavaExecutorTest {
 		LocalJavaExecutor executor = new LocalJavaExecutor();
 		for (Scenario scenario : scenarios) {
 			long before = countCodeJudgeTempDirs();
-			executor.execute(new ExecutionRequest(scenario.source(), scenario.timeLimit(), sumTestInputs()));
+			executor.execute(new ExecutionRequest(scenario.source(), scenario.timeLimit(), SUM_SIGNATURE, sumTestInputs()));
 			assertThat(countCodeJudgeTempDirs()).as("scenario: %s", scenario.source()).isEqualTo(before);
 		}
 	}
@@ -200,12 +203,103 @@ class LocalJavaExecutorTest {
 		long before = countCodeJudgeTempDirs();
 
 		ExecutionResult result = executor.execute(
-				new ExecutionRequest(CORRECT_SOURCE, DEFAULT_TIME_LIMIT, sumTestInputs()));
+				new ExecutionRequest(CORRECT_SOURCE, DEFAULT_TIME_LIMIT, SUM_SIGNATURE, sumTestInputs()));
 
 		assertThat(result.compiled()).isFalse();
 		assertThat(result.verdict()).isEqualTo(Verdict.COMPILATION_ERROR);
 		assertThat(result.errorMessage()).contains("timed out");
 		assertThat(countCodeJudgeTempDirs()).isEqualTo(before);
+	}
+
+	@ParameterizedTest
+	@MethodSource("otherSignatureShapes")
+	void otherSignatureShapesCompileAndJudgeCorrectAndIncorrectSolutions(ShapeScenario scenario) {
+		LocalJavaExecutor executor = new LocalJavaExecutor();
+
+		ExecutionResult correctResult = executor.execute(
+				new ExecutionRequest(scenario.correctSource(), DEFAULT_TIME_LIMIT, scenario.signature(), scenario.testInputs()));
+		assertThat(correctResult.verdict())
+				.as("%s correct solution", scenario.signature().methodName())
+				.isEqualTo(Verdict.ACCEPTED);
+
+		ExecutionResult wrongResult = executor.execute(
+				new ExecutionRequest(scenario.wrongSource(), DEFAULT_TIME_LIMIT, scenario.signature(), scenario.testInputs()));
+		assertThat(wrongResult.verdict())
+				.as("%s wrong solution", scenario.signature().methodName())
+				.isEqualTo(Verdict.WRONG_ANSWER);
+	}
+
+	private static Stream<ShapeScenario> otherSignatureShapes() {
+		return Stream.of(
+				new ShapeScenario(
+						new MethodSignature("isPalindrome", SignatureShape.STRING_TO_BOOLEAN),
+						"""
+						public class Solution {
+						    public static boolean isPalindrome(String s) {
+						        return new StringBuilder(s).reverse().toString().equals(s);
+						    }
+						}
+						""",
+						"""
+						public class Solution {
+						    public static boolean isPalindrome(String s) {
+						        return false;
+						    }
+						}
+						""",
+						List.of(new TestInput(List.of("racecar"), "true"), new TestInput(List.of("hello"), "false"))),
+				new ShapeScenario(
+						new MethodSignature("maxElement", SignatureShape.INT_ARRAY_TO_INT),
+						"""
+						public class Solution {
+						    public static int maxElement(int[] nums) {
+						        int max = nums[0];
+						        for (int n : nums) {
+						            if (n > max) {
+						                max = n;
+						            }
+						        }
+						        return max;
+						    }
+						}
+						""",
+						"""
+						public class Solution {
+						    public static int maxElement(int[] nums) {
+						        return 0;
+						    }
+						}
+						""",
+						List.of(new TestInput(List.of("1,5,3"), "5"), new TestInput(List.of("-10,-3,-7"), "-3"),
+								new TestInput(List.of("42"), "42"))),
+				new ShapeScenario(
+						new MethodSignature("countVowels", SignatureShape.STRING_TO_INT),
+						"""
+						public class Solution {
+						    public static int countVowels(String s) {
+						        int count = 0;
+						        for (char c : s.toCharArray()) {
+						            if ("aeiouAEIOU".indexOf(c) >= 0) {
+						                count++;
+						            }
+						        }
+						        return count;
+						    }
+						}
+						""",
+						"""
+						public class Solution {
+						    public static int countVowels(String s) {
+						        return -1;
+						    }
+						}
+						""",
+						List.of(new TestInput(List.of("hello"), "2"), new TestInput(List.of("AEIOU"), "5"),
+								new TestInput(List.of(""), "0"))));
+	}
+
+	private record ShapeScenario(
+			MethodSignature signature, String correctSource, String wrongSource, List<TestInput> testInputs) {
 	}
 
 	private static List<TestInput> sumTestInputs() {

@@ -10,6 +10,9 @@ import org.springframework.http.ResponseEntity;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -38,6 +41,17 @@ class ProblemApiIntegrationTest {
 		JsonNode seeded = findByTitle(body, SEEDED_TITLE);
 		assertThat(seeded).isNotNull();
 		assertThat(seeded.propertyNames()).containsExactlyInAnyOrder("id", "title");
+	}
+
+	@Test
+	void listProblemsReturnsAllSeededProblems() throws Exception {
+		ResponseEntity<String> response = restTemplate.getForEntity("/api/problems", String.class);
+
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+		JsonNode body = objectMapper.readTree(response.getBody());
+
+		assertThat(titlesIn(body)).containsExactlyInAnyOrder(
+				"Sum Two Integers", "Is Palindrome", "Maximum Element", "Count Vowels");
 	}
 
 	@Test
@@ -73,6 +87,14 @@ class ProblemApiIntegrationTest {
 			}
 		}
 		return null;
+	}
+
+	private List<String> titlesIn(JsonNode array) {
+		List<String> titles = new ArrayList<>();
+		for (JsonNode node : array) {
+			titles.add(node.path("title").asString());
+		}
+		return titles;
 	}
 
 }

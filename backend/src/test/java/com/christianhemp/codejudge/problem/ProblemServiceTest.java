@@ -1,5 +1,7 @@
 package com.christianhemp.codejudge.problem;
 
+import com.christianhemp.codejudge.execution.SignatureShape;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -20,7 +22,9 @@ class ProblemServiceTest {
 
 	@Test
 	void listProblemsReturnsSummariesForAllProblems() {
-		Problem problem = new Problem("Sum Two Integers", "Add two ints.", "public static int sum(int a, int b)");
+		Problem problem = new Problem(
+				"Sum Two Integers", "Add two ints.", "public static int sum(int a, int b)",
+				"sum", SignatureShape.INT_INT_TO_INT);
 		when(problemRepository.findAll()).thenReturn(List.of(problem));
 
 		ProblemService service = new ProblemService(problemRepository);
@@ -32,7 +36,9 @@ class ProblemServiceTest {
 
 	@Test
 	void getProblemReturnsDetailForExistingId() {
-		Problem problem = new Problem("Sum Two Integers", "Add two ints.", "public static int sum(int a, int b)");
+		Problem problem = new Problem(
+				"Sum Two Integers", "Add two ints.", "public static int sum(int a, int b)",
+				"sum", SignatureShape.INT_INT_TO_INT);
 		when(problemRepository.findById(1L)).thenReturn(Optional.of(problem));
 
 		ProblemService service = new ProblemService(problemRepository);
