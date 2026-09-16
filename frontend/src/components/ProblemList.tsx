@@ -18,14 +18,15 @@ export function ProblemList({ problems, error, selectedId, onSelect }: ProblemLi
       )}
       {!error && problems !== null && problems.length > 0 && (
         <ul>
-          {problems.map((problem) => (
+          {problems.map((problem, index) => (
             <li key={problem.id}>
               <button
                 type="button"
                 className={problem.id === selectedId ? "problem-item selected" : "problem-item"}
                 onClick={() => onSelect(problem.id)}
               >
-                {problem.title}
+                <span className="problem-index">{String(index + 1).padStart(2, "0")}</span>
+                <span className="problem-title">{problem.title}</span>
               </button>
             </li>
           ))}

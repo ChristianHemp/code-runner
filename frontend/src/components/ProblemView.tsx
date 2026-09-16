@@ -43,13 +43,19 @@ export function ProblemView({
     <main className="problem-view">
       <h1>{problem.title}</h1>
       <p className="problem-description">{problem.description}</p>
-      <pre className="method-signature">{problem.methodSignature}</pre>
+
+      <div className="problem-method">
+        <span className="field-label">Method</span>
+        <pre className="method-signature">{problem.methodSignature}</pre>
+      </div>
 
       <CodeEditor value={sourceCode} onChange={onSourceChange} disabled={submitting} />
 
-      <button type="button" className="submit-button" onClick={onSubmit} disabled={submitting}>
-        {submitting ? "Judging…" : "Submit"}
-      </button>
+      <div className="actions-row">
+        <button type="button" className="submit-button" onClick={onSubmit} disabled={submitting}>
+          {submitting ? "Running…" : "Run solution"}
+        </button>
+      </div>
 
       <SubmissionResult submission={submission} submitting={submitting} error={submitError} />
     </main>

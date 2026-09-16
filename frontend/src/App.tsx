@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ApiError, getProblem, getProblems, submitSolution } from "./api/judgeApi";
 import type { ProblemDetail, ProblemSummary, Submission } from "./types/api";
 import { ProblemList } from "./components/ProblemList";
@@ -50,32 +50,25 @@ export default function App() {
     };
   }, []);
 
-  useEffect(() => {
-    if (selectedProblemId === null) return;
+  const latestRequestedProblemIdRef = useRef<number | null>(null);
 
-    let cancelled = false;
-
-    getProblem(selectedProblemId)
-      .then((detail) => {
-        if (cancelled) return;
-        setProblemDetail(detail);
-        setSourceCode(buildStarterTemplate(detail.methodSignature));
-      })
-      .catch((error: unknown) => {
-        if (!cancelled) setProblemLoadError(messageFor(error));
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedProblemId]);
-
-  function handleSelectProblem(id: number) {
+  async function handleSelectProblem(id: number) {
+    latestRequestedProblemIdRef.current = id;
     setSelectedProblemId(id);
     setProblemDetail(null);
     setProblemLoadError(null);
     setSubmission(null);
     setSubmitError(null);
+
+    try {
+      const detail = await getProblem(id);
+      if (latestRequestedProblemIdRef.current !== id) return;
+      setProblemDetail(detail);
+      setSourceCode(buildStarterTemplate(detail.methodSignature));
+    } catch (error) {
+      if (latestRequestedProblemIdRef.current !== id) return;
+      setProblemLoadError(messageFor(error));
+    }
   }
 
   async function handleSubmit() {
@@ -98,7 +91,11 @@ export default function App() {
   return (
     <div className="app-layout">
       <header className="app-header">
-        <span className="app-title">Code Judge</span>
+        <span className="app-title">Not L**tcode</span>
+        <div className="app-meta">
+          <span>Java 25</span>
+          <span>Local executor</span>
+        </div>
       </header>
       <div className="app-body">
         <ProblemList

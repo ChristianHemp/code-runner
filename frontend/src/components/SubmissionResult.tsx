@@ -46,26 +46,19 @@ export function SubmissionResult({ submission, submitting, error }: SubmissionRe
   const verdict = submission.verdict;
 
   return (
-    <div className="submission-result">
-      <div className={verdict ? `verdict-badge ${VERDICT_CLASSES[verdict]}` : "verdict-badge"}>
-        {verdict ? VERDICT_LABELS[verdict] : submission.status}
-      </div>
-      <dl className="submission-meta">
+    <div className={verdict ? `submission-result ${VERDICT_CLASSES[verdict]}` : "submission-result"}>
+      <div className="verdict-line">
+        <span className="verdict-word">{verdict ? VERDICT_LABELS[verdict] : submission.status}</span>
         {submission.runtimeMs !== null && (
-          <div className="submission-meta-row">
-            <dt>Runtime</dt>
-            <dd>{submission.runtimeMs} ms</dd>
-          </div>
+          <span className="verdict-runtime">{submission.runtimeMs} ms</span>
         )}
-        {submission.errorMessage && (
-          <div className="submission-meta-row submission-error">
-            <dt>Details</dt>
-            <dd>
-              <pre>{submission.errorMessage}</pre>
-            </dd>
-          </div>
-        )}
-      </dl>
+      </div>
+      {submission.errorMessage && (
+        <div className="submission-error">
+          <span className="field-label">Details</span>
+          <pre>{submission.errorMessage}</pre>
+        </div>
+      )}
     </div>
   );
 }

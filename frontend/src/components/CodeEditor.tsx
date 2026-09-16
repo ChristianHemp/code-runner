@@ -65,17 +65,20 @@ export function CodeEditor({ value, onChange, disabled }: CodeEditorProps) {
   }
 
   return (
-    <textarea
-      ref={textareaRef}
-      className="code-editor"
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-      onKeyDown={handleKeyDown}
-      disabled={disabled}
-      spellCheck={false}
-      autoCapitalize="off"
-      autoCorrect="off"
-      aria-label="Java source code"
-    />
+    <div className="editor-pane">
+      <div className="editor-filebar">Solution.java</div>
+      <textarea
+        ref={textareaRef}
+        className="code-editor"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        onKeyDown={handleKeyDown}
+        disabled={disabled}
+        spellCheck={false}
+        autoCapitalize="off"
+        autoCorrect="off"
+        aria-label="Java source code"
+      />
+    </div>
   );
 }
