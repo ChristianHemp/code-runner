@@ -1,4 +1,4 @@
-# Code Judge
+# Leetclone Code Runner
 
 A small CodingBat/LeetCode-style code judge. Submit Java, it compiles and runs your
 code against hidden tests, and you get back a verdict (`ACCEPTED`, `WRONG_ANSWER`,
